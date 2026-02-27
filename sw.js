@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abqarieno-v13'; // Update: Force update by changing cache version
+const CACHE_NAME = 'abqarieno-v21'; // Update: Fix Navigation Logic
 const ASSETS = [
     './',
     './index.html',

@@ -1,3 +1,12 @@
+/* --- SPA Navigation Transition --- */
+#main-content {
+    transition: opacity 0.25s ease-in-out;
+}
+body.page-loading #main-content {
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction during transition */
+}
+
 /*
   Abqarieno Platform Stylesheet
   Version: 2.5
@@ -146,7 +155,7 @@ body.light-mode .navbar:hover { background-color: rgba(255, 255, 255, 0.95); }
 .scroll-animate {
     opacity: 0;
     transform: translateY(40px);
-    transition: opacity 0.6s ease-out, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: opacity 0.6s ease-out, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);    will-change: opacity, transform; /* Performance hint */
 }
 .scroll-animate.visible {
     opacity: 1;
@@ -180,6 +189,7 @@ body.light-mode .navbar:hover { background-color: rgba(255, 255, 255, 0.95); }
     background-size: 110% 110%;
     background-position: 50% 50%;
     will-change: transform;
+    content-visibility: auto; /* Improve rendering performance */
 }
 .particles {
     position: absolute;
@@ -201,7 +211,7 @@ body.light-mode .navbar:hover { background-color: rgba(255, 255, 255, 0.95); }
     animation: moveParticles 20s linear infinite;
     bottom: -150px;
     border-radius: 50%;
-    will-change: transform;
+    will-change: transform, opacity;
 }
 .particles span:nth-child(even) {
     background: rgba(0, 210, 255, 0.15);
@@ -319,6 +329,7 @@ body.light-mode .navbar:hover { background-color: rgba(255, 255, 255, 0.95); }
     border-radius: 15px;
     overflow: hidden;
     padding: 10px;
+    content-visibility: auto; /* Huge performance boost for large tables */
 }
 
 .schedule-table {
@@ -903,12 +914,92 @@ footer {
     width: 100%; max-width: 300px; margin-top: 10px;
     height: 40px; border-radius: 20px;
 }
+
+/* WhatsApp Style File Cards */
+.msg-file-card {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.3s;
+    text-decoration: none;
+    max-width: 300px;
+}
+.msg-file-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--neon-green);
+}
+.file-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: #222;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+.file-icon-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.file-icon-wrapper i { font-size: 1.5rem; color: #888; }
+.file-info { flex: 1; overflow: hidden; }
+.file-name { font-size: 0.9rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; display: block; }
+.file-type { font-size: 0.75rem; color: #aaa; margin-top: 3px; display: block; }
+
+.video-wrapper { position: relative; display: inline-block; max-width: 100%; margin-top: 10px; }
+.video-poster { width: 100%; border-radius: 10px; display: block; cursor: pointer; }
+.play-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.8); pointer-events: none; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
 /* Custom Audio Player Colors (Webkit) */
 audio::-webkit-media-controls-panel { background-color: #f1f1f1; }
 audio::-webkit-media-controls-play-button { background-color: #fff; border-radius: 50%; }
 
 .broadcast-box textarea { width: 100%; background: #050508; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 10px; resize: vertical; min-height: 100px; margin-bottom: 15px; }
 .broadcast-box textarea:focus { border-color: var(--neon-green); outline: none; }
+
+/* Reusable Upload Component Styles */
+.file-btn { 
+    background: #1a2332; 
+    color: var(--neon-green); 
+    padding: 8px 15px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    border: 1px solid var(--neon-green); 
+    font-size: 0.8rem; 
+    transition: 0.3s; 
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.file-btn:hover { background: var(--neon-green); color: #000; }
+
+.preview-img { 
+    max-width: 100px; max-height: 40px; 
+    object-fit: contain; border-radius: 8px; 
+    border: 1px solid var(--neon-green); 
+    display: none; 
+    background: rgba(0,0,0,0.3);
+}
+
+.upload-progress-container {
+    width: 100%;
+    background-color: #1a2332;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    display: none; /* Hidden by default */
+}
+.upload-progress-bar {
+    height: 8px;
+    width: 0%;
+    background-color: var(--neon-green);
+    box-shadow: 0 0 10px var(--neon-green);
+    border-radius: 8px;
+    transition: width 0.4s ease;
+}
 
 @media (max-width: 768px) {
     .admin-sidebar { width: 70px; padding: 10px; }

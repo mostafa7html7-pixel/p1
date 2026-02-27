@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://abqarieno-default-rtdb.firebaseio.com">
 </head>
 <body class="admin-body">
 
@@ -119,10 +120,22 @@
                         <div class="panel-title"><i class="fa-solid fa-tower-broadcast" style="color:var(--neon-gold)"></i> إرسال تنبيه عاجل للجميع</div>
                     </div>
                     <div class="broadcast-box">
-                        <textarea id="broadcastMsg" placeholder="اكتب رسالتك هنا لتظهر كإشعار ناري لكل الطلاب المتصلين..."></textarea>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="color:#888; font-size:0.9rem;"><input type="checkbox"> إرسال كإشعار منبثق (Popup)</label>
-                            <button onclick="sendBroadcast()" style="background:var(--neon-green); color:#000; padding:10px 30px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i> إرسال الآن</button>
+                        <textarea id="broadcastMsg" placeholder="اكتب رسالتك هنا..."></textarea>
+                        
+                        <div class="upload-progress-container" id="broadcastUploadProgressContainer" style="margin-bottom: 15px;">
+                            <div class="upload-progress-bar" id="broadcastUploadProgressBar"></div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <label class="file-btn">
+                                    <i class="fa-solid fa-paperclip"></i> <span>إرفاق ملف</span>
+                                    <input type="file" id="broadcastFileInput" hidden onchange="handleBroadcastFileSelect()">
+                                </label>
+                                <img id="broadcastImgPreview" class="preview-img" alt="Preview">
+                                <span id="broadcastFileName" style="font-size: 0.8rem; color: #888;"></span>
+                            </div>
+                            <button id="sendBroadcastBtn" onclick="sendBroadcast()" style="background:var(--neon-green); color:#000; padding:10px 30px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i> إرسال الآن</button>
                         </div>
                     </div>
                     
@@ -377,16 +390,19 @@
             renderUsersTable();
         }
 
+        // تحسين الأداء: استخدام متغير لتجميع HTML بدلاً من تعديل DOM في كل لفة
         window.renderUsersTable = function() {
             if (!currentUsersSnapshot) return;
 
             const usersTableBody = document.getElementById('usersTableBody');
             const banTableBody = document.getElementById('banTableBody');
             const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-            usersTableBody.innerHTML = '';
-            banTableBody.innerHTML = '';
+            // Performance: Use buffers instead of direct DOM manipulation
+            let usersHTML = '';
+            let banHTML = '';
+            
             const now = Date.now();
             const startOfDay = new Date();
             startOfDay.setHours(0,0,0,0);
@@ -455,7 +471,7 @@
                     ? `<img src="${displayPhoto}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-left:8px; border:2px solid var(--neon-green); cursor:pointer;" onclick="openLightbox('${displayPhoto}', 'image')">` 
                     : `<i class="fa-solid fa-user-graduate" style="font-size:1.2rem; margin-left:8px; vertical-align:middle;"></i>`;
 
-                const row = `
+                usersHTML += `
                     <tr style="${u.banned ? 'background:rgba(255,0,0,0.1)' : ''}">
                         <td>${avatarHTML} <span style="vertical-align:middle;">${displayName}</span> ${u.role === 'admin' ? '<span style="color:gold; font-size:0.8rem;">(Admin)</span>' : ''}</td>
                         <td>${u.phone || '<span style="color:#555">غير مسجل</span>'}</td>
@@ -468,25 +484,27 @@
                         <td>
                             ${u.role !== 'admin' ? `
                                 <button class="action-btn btn-info" onclick="openEditModal('${uid}', '${displayName}', '${u.phone || ''}', '${u.grade || ''}', '${u.subscription || 'free'}', '${u.plan || ''}', '${u.gender || ''}')"><i class="fa-solid fa-pen"></i></button>
-                                <button class="action-btn btn-ban" onclick="banUser('${uid}', ${u.banned})">${u.banned ? 'فك الحظر' : 'حظر'}</button>
+                                <button class="action-btn btn-ban" onclick="banUser('${uid}', ${u.banned || false})">${u.banned ? 'فك الحظر' : 'حظر'}</button>
                                 <button class="action-btn btn-delete" onclick="deleteUser('${uid}')"><i class="fa-solid fa-trash"></i></button>
                             ` : ''}
                         </td>
                     </tr>
                 `;
-                usersTableBody.innerHTML += row;
 
                 if (u.banned) {
-                    const banRow = `
+                    banHTML += `
                         <tr>
                             <td>${displayName}</td>
                             <td>${displayEmail}</td>
                             <td><button class="action-btn btn-ban" onclick="banUser('${uid}', true)">فك الحظر</button></td>
                         </tr>
                     `;
-                    banTableBody.innerHTML += banRow;
                 }
             });
+            
+            // Performance: Update DOM once
+            usersTableBody.innerHTML = usersHTML;
+            banTableBody.innerHTML = banHTML;
             
             // Update Stats
             document.getElementById('totalStudents').innerText = totalCount;
@@ -495,15 +513,16 @@
 
         window.showTodayStudents = function() {
             const list = document.getElementById('todayStudentsList');
-            list.innerHTML = '';
+            let html = '';
             todayStudentsData.forEach(student => {
-                list.innerHTML += `
+                html += `
                     <tr>
                         <td>${student.name}</td>
                         <td>${student.time}</td>
                     </tr>
                 `;
             });
+            list.innerHTML = html;
             document.getElementById('todayStudentsModal').style.display = 'block';
         }
 
@@ -544,16 +563,17 @@
             onValue(ref(db, 'payment_requests'), (snapshot) => {
                 const list = document.getElementById('requestsList');
                 const badge = document.getElementById('payBadge');
-                list.innerHTML = '';
                 
                 if(snapshot.exists()) {
                     const reqs = snapshot.val();
                     const count = Object.keys(reqs).length;
                     badge.innerText = count;
                     badge.style.display = 'inline-block';
+                    
+                    let reqHTML = '';
 
                     Object.entries(reqs).forEach(([key, val]) => {
-                        const html = `
+                        reqHTML += `
                             <div class="req-card">
                                 <div class="req-info">
                                     <h4>${val.userEmail} <span style="color:var(--neon-gold)">(${val.plan})</span></h4>
@@ -566,8 +586,8 @@
                                 </div>
                             </div>
                         `;
-                        list.innerHTML += html;
                     });
+                    list.innerHTML = reqHTML;
                 } else {
                     list.innerHTML = '<p style="text-align:center; color:#666;">لا توجد طلبات جديدة</p>';
                     badge.style.display = 'none';
@@ -577,7 +597,8 @@
             // 5. Broadcasts List Listener (For Deletion)
             onValue(ref(db, 'broadcasts'), (snapshot) => {
                 const list = document.getElementById('activeBroadcastsList');
-                list.innerHTML = '';
+                let msgHTML = '';
+                
                 if(snapshot.exists()) {
                     snapshot.forEach((child) => {
                         const msg = child.val();
@@ -592,7 +613,7 @@
                             else mediaPreview = '<i class="fa-solid fa-paperclip" style="color:#888; margin-right:5px;"></i> ملف';
                         }
 
-                        const html = `
+                        msgHTML = `
                             <div class="msg-list-item">
                                 <div class="msg-list-content">
                                     <span class="msg-list-date">${date}</span>
@@ -600,9 +621,9 @@
                                 </div>
                                 <button class="msg-delete-btn" onclick="deleteBroadcast('${key}')"><i class="fa-solid fa-trash"></i> حذف</button>
                             </div>
-                        `;
-                        list.insertAdjacentHTML('afterbegin', html);
+                        ` + msgHTML; // Prepend logic
                     });
+                    list.innerHTML = msgHTML;
                 } else {
                     list.innerHTML = '<p style="text-align:center; color:#666;">لا توجد رسائل</p>';
                 }
@@ -636,13 +657,21 @@
             if(confirm(`هل أنت متأكد من ${action} هذا الطالب؟`)) {
                 update(ref(db, 'users/' + uid), {
                     banned: !isBanned
+                }).then(() => {
+                    // alert("تم تغيير حالة الحظر بنجاح"); // التحديث يتم تلقائياً في الجدول
+                }).catch(err => {
+                    alert("حدث خطأ: " + err.message);
                 });
             }
         }
 
         window.deleteUser = function(uid) {
             if(confirm("تحذير هام: هل أنت متأكد من حذف بيانات هذا الطالب نهائياً من قاعدة البيانات؟ لا يمكن التراجع عن هذا الإجراء.")) {
-                remove(ref(db, 'users/' + uid));
+                remove(ref(db, 'users/' + uid)).then(() => {
+                    alert("تم حذف الحساب واختفاء بياناته من القائمة بنجاح.");
+                }).catch(err => {
+                    alert("حدث خطأ أثناء الحذف: " + err.message);
+                });
             }
         }
 

@@ -227,36 +227,38 @@
         <div class="lightbox-content" id="lightbox-content"></div>
     </div>
 
-    <div class="chat-wrapper">
-        <div class="live-status">
-            <div class="pulse"></div>
-            <span>متصل الآن: <strong id="userCount" style="color: var(--master-neon);">241</strong> طالب يتابعون الدكتور</span>
-        </div>
-
-        <div class="chat-container">
-            <div id="master-panel">
-                <textarea id="msgInput" class="master-input" rows="2" placeholder="اكتب تعليماتك هنا يا دكتور..."></textarea>
-                <!-- شريط تقدم الرفع -->
-                <div class="upload-progress-container" id="uploadProgressContainer">
-                    <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                </div>
-                <div class="upload-row">
-                    <label class="file-btn">
-                        <i class="fa-solid fa-paperclip"></i> رفع ملف/صورة
-                        <input type="file" id="fileInput" hidden onchange="handleFileSelect()">
-                    </label>
-                    <img id="imgPreview" class="preview-img" alt="Preview">
-                    <span id="fileName" style="font-size: 0.7rem; color: #888; display:none;"></span>
-                    <button onclick="pushMessage()" style="margin-right:auto; padding:8px 20px; background:var(--master-neon); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">نشر</button>
-                    <button id="cancelUploadBtn" class="btn-cancel-upload">إلغاء</button>
-                </div>
+    <main id="main-content">
+        <div class="chat-wrapper">
+            <div class="live-status">
+                <div class="pulse"></div>
+                <span>متصل الآن: <strong id="userCount" style="color: var(--master-neon);">241</strong> طالب يتابعون الدكتور</span>
             </div>
 
-            <div id="messages-flow">
-                <p style="text-align: center; color: #444;">جاري جلب آخر توجيهات الدكتور...</p>
+            <div class="chat-container">
+                <div id="master-panel">
+                    <textarea id="msgInput" class="master-input" rows="2" placeholder="اكتب تعليماتك هنا يا دكتور..."></textarea>
+                    <!-- شريط تقدم الرفع -->
+                    <div class="upload-progress-container" id="uploadProgressContainer">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                    </div>
+                    <div class="upload-row">
+                        <label class="file-btn">
+                            <i class="fa-solid fa-paperclip"></i> رفع ملف/صورة
+                            <input type="file" id="fileInput" hidden onchange="handleFileSelect()">
+                        </label>
+                        <img id="imgPreview" class="preview-img" alt="Preview">
+                        <span id="fileName" style="font-size: 0.7rem; color: #888; display:none;"></span>
+                        <button onclick="pushMessage()" style="margin-right:auto; padding:8px 20px; background:var(--master-neon); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">نشر</button>
+                        <button id="cancelUploadBtn" class="btn-cancel-upload">إلغاء</button>
+                    </div>
+                </div>
+
+                <div id="messages-flow">
+                    <p style="text-align: center; color: #444;">جاري جلب آخر توجيهات الدكتور...</p>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <footer>
         <div class="footer-links">
@@ -435,6 +437,9 @@
                             const formData = new FormData();
                             formData.append('file', file);
                             formData.append('upload_preset', UPLOAD_PRESET);
+                            if (file.type.startsWith('image/')) {
+                                formData.append('transformation', 'q_auto,f_auto'); // ضغط الصور تلقائياً
+                            }
                             
                             responseData = await uploadChunk(formData, null, null, (progress) => {
                                 progressBar.style.width = progress + '%';
@@ -496,6 +501,15 @@
             }, 50); // تأخير بسيط للسماح للواجهة بالتحديث
          }
 
+        // دالة مساعدة لاستخراج رابط الصورة المصغرة من Cloudinary
+        function getThumbnail(url) {
+            // استبدال الامتداد بـ .jpg للحصول على صورة مصغرة للفيديو أو الـ PDF
+            if (!url) return '';
+            const parts = url.split('.');
+            parts.pop();
+            return parts.join('.') + '.jpg';
+        }
+
         // عرض الرسائل (نظام سريع جداً)
         const flow = document.getElementById('messages-flow');
         // إزالة رسالة التحميل عند وصول أول رسالة
@@ -522,15 +536,38 @@
             if(m.mediaURL) {
                 if(m.mediaType === 'image') {
                     mediaHtml = `<img src="${m.mediaURL}" class="msg-media" onclick="openLightbox('${m.mediaURL}', 'image')" style="cursor:pointer; max-width: 250px; border-radius: 8px; margin-top: 10px;">
-                                <a href="${m.mediaURL}" download="dr-image" target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> حفظ الصورة</a>`;
+                                <a href="${m.mediaURL}" download target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> حفظ الصورة</a>`;
                 } else if (m.mediaType === 'video') {
-                    mediaHtml = `<video src="${m.mediaURL}" controls class="msg-video" style="max-width:100%; border-radius: 8px; margin-top: 12px;"></video>
-                                <a href="${m.mediaURL}" download="dr-video.mp4" target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> تحميل الفيديو</a>`;
+                    // استخدام الصورة المصغرة (Poster) لتسريع التحميل وتوفير البيانات
+                    const poster = getThumbnail(m.mediaURL);
+                    mediaHtml = `
+                        <div class="video-wrapper" onclick="this.innerHTML='<video src=\\'${m.mediaURL}\\' controls autoplay style=\\'width:100%; border-radius:10px;\\'></video>'">
+                            <img src="${poster}" class="video-poster" alt="Video Preview">
+                            <i class="fa-solid fa-circle-play play-overlay"></i>
+                        </div>
+                        <a href="${m.mediaURL}" download target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> تحميل الفيديو</a>`;
                 } else if (m.mediaType === 'audio') {
                     mediaHtml = `<audio src="${m.mediaURL}" controls class="msg-audio" style="width:100%; margin-top:10px;"></audio>
-                                <a href="${m.mediaURL}" download="dr-audio.mp3" target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> تحميل الصوت</a>`;
+                                <a href="${m.mediaURL}" download target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> تحميل الصوت</a>`;
                 } else {
-                    mediaHtml = `<a href="${m.mediaURL}" download target="_blank" class="download-btn"><i class="fa-solid fa-file-arrow-down"></i> تحميل المرفق</a>`;
+                    // كارت الملفات (PDF وغيرها)
+                    let icon = '<i class="fa-solid fa-file-lines"></i>';
+                    let previewImg = '';
+                    
+                    if(m.mediaURL.endsWith('.pdf')) {
+                        icon = '<i class="fa-solid fa-file-pdf" style="color:#e74c3c"></i>';
+                        // محاولة جلب صورة للصفحة الأولى من الـ PDF
+                        previewImg = `<img src="${getThumbnail(m.mediaURL)}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
+                    mediaHtml = `
+                        <a href="${m.mediaURL}" target="_blank" class="msg-file-card">
+                            <div class="file-icon-wrapper">${previewImg || icon}</div>
+                            <div class="file-info">
+                                <span class="file-name">ملف مرفق</span>
+                                <span class="file-type">اضغط للتحميل والمعاينة</span>
+                            </div>
+                        </a>`;
                 }
             }
 

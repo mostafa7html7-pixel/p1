@@ -6,14 +6,18 @@
     <meta name="description" content="منصة الدكتور التعليمية للأحياء - شرح مبسط، فيديوهات عالية الجودة، كتب وملازم مجانية، ومتابعة مستمرة لطلاب الثانوية العامة.">
     <meta name="keywords" content="أحياء, ثانوية عامة, دكتور عبدالله, منصة تعليمية, شرح أحياء, مراجعات, امتحانات, كتب pdf">
     <title>الرئيسية - الدكتور</title>
+    <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://abqarieno-default-rtdb.firebaseio.com">
+    <link rel="preconnect" href="https://res.cloudinary.com">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&family=Reem+Kufi:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="manifest" href="manifest.json">
     <link rel="preload" as="image" href="6.jpeg">
+    <link rel="preload" href="main.js" as="script">
     <style>
         @media (max-width: 992px) {
             .grid-container.grid-3 {
@@ -102,55 +106,57 @@
         </div>
     </nav>
 
-    <section class="hero">
-        <div class="particles">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div class="hero-content">
-            <div class="hero-text">
-                <p class="subtitle scroll-animate" style="transition-delay: 0.1s;">BIOLOGY LAB</p>
-                <h1 class="scroll-animate" style="transition-delay: 0.2s;">عالم الأحياء <br> <span class="neon-green-text">بمنظور مختلف</span></h1>
-                <p class="hero-desc scroll-animate" style="transition-delay: 0.3s;">استعد لرحلة فريدة في أعماق الخلية والتشريح مع دكتور عبدالله . تعليمنا ليس مجرد حفظ، بل هو تجربة بصرية وعلمية تفوق الخيال.</p>
-                <div class="hero-btns scroll-animate" style="transition-delay: 0.4s;">
-                    <a href="videos.html" class="btn-green">ابدأ المشاهدة الآن</a>
-                    <a href="library.html" class="btn-outline">تصفح المكتبة</a>
+    <main id="main-content">
+        <section class="hero">
+            <div class="particles">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <p class="subtitle scroll-animate" style="transition-delay: 0.1s;">BIOLOGY LAB</p>
+                    <h1 class="scroll-animate" style="transition-delay: 0.2s;">عالم الأحياء <br> <span class="neon-green-text">بمنظور مختلف</span></h1>
+                    <p class="hero-desc scroll-animate" style="transition-delay: 0.3s;">استعد لرحلة فريدة في أعماق الخلية والتشريح مع دكتور عبدالله . تعليمنا ليس مجرد حفظ، بل هو تجربة بصرية وعلمية تفوق الخيال.</p>
+                    <div class="hero-btns scroll-animate" style="transition-delay: 0.4s;">
+                        <a href="videos.html" class="btn-green">ابدأ المشاهدة الآن</a>
+                        <a href="library.html" class="btn-outline">تصفح المكتبة</a>
+                    </div>
+                </div>
+                
+                <div class="hero-image scroll-animate" style="transition-delay: 0.5s;">
+                    <img src="212.png" alt="دكتور عبدالله" class="doctor-img" fetchpriority="high" width="500" height="600">
                 </div>
             </div>
-            
-            <div class="hero-image scroll-animate" style="transition-delay: 0.5s;">
-                <img src="212.png" alt="دكتور عبدالله" class="doctor-img" fetchpriority="high">
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="container">
-        <div class="grid-container grid-3" style="padding-top: 50px;">
-            <div class="feature-box scroll-animate" style="transition-delay: 0.1s;">
-                <i class="fa-solid fa-book-open" style="color:var(--neon-red)"></i>
-                <h3>محتوى حصري</h3>
-                <p style="color:#888; font-size:0.9rem">كتب ومذكرات أعدها الدكتور خصيصاً لتسهيل أصعب المفاهيم.</p>
+        <section class="container">
+            <div class="grid-container grid-3" style="padding-top: 50px;">
+                <div class="feature-box scroll-animate" style="transition-delay: 0.1s;">
+                    <i class="fa-solid fa-book-open" style="color:var(--neon-red)"></i>
+                    <h3>محتوى حصري</h3>
+                    <p style="color:#888; font-size:0.9rem">كتب ومذكرات أعدها الدكتور خصيصاً لتسهيل أصعب المفاهيم.</p>
+                </div>
+                <div class="feature-box green scroll-animate" style="transition-delay: 0.2s;">
+                    <i class="fa-regular fa-circle-play"></i>
+                    <h3>فيديوهات 4K</h3>
+                    <p style="color:#888; font-size:0.9rem">شروحات تفصيلية بجودة عالية تركز على الفهم العميق للبيولوجيا.</p>
+                </div>
+                <div class="feature-box scroll-animate" style="transition-delay: 0.3s;">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--neon-red)"></i>
+                    <h3>تقييم مستمر</h3>
+                    <p style="color:#888; font-size:0.9rem">اختبارات دورية ومتابعة دقيقة لكل طالب لضمان التفوق.</p>
+                </div>
             </div>
-            <div class="feature-box green scroll-animate" style="transition-delay: 0.2s;">
-                <i class="fa-regular fa-circle-play"></i>
-                <h3>فيديوهات 4K</h3>
-                <p style="color:#888; font-size:0.9rem">شروحات تفصيلية بجودة عالية تركز على الفهم العميق للبيولوجيا.</p>
-            </div>
-            <div class="feature-box scroll-animate" style="transition-delay: 0.3s;">
-                <i class="fa-solid fa-shield-halved" style="color:var(--neon-red)"></i>
-                <h3>تقييم مستمر</h3>
-                <p style="color:#888; font-size:0.9rem">اختبارات دورية ومتابعة دقيقة لكل طالب لضمان التفوق.</p>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <div class="neon-wrapper" id="registrationModal">
         <div class="registration-card">
@@ -278,6 +284,33 @@
             if (!user) {
                 // If you want to protect the main page, uncomment the next line
                 // window.location.href = 'auth.html';
+            } else {
+                // التحقق مما إذا كان الأدمن قد حذف المستخدم
+                const uid = user.uid;
+                get(ref(db, 'users/' + uid)).then((snapshot) => {
+                    // 1. التحقق من الحظر (Ban Check)
+                    if (snapshot.exists() && snapshot.val().banned) {
+                        document.body.innerHTML = `
+                        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#500000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999999; text-align:center; font-family:'Cairo', sans-serif;">
+                            <i class="fa-solid fa-ban" style="font-size:5rem; margin-bottom:20px; color:#ff5555;"></i>
+                            <h1 style="font-size:2.5rem; margin-bottom:10px;">تم حظر الحساب</h1>
+                            <p style="font-size:1.2rem;">عذراً، تم إيقاف حسابك نهائياً من قبل الإدارة.</p>
+                        </div>`;
+                        return;
+                    }
+
+                    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                    
+                    // إذا كان التطبيق مثبتاً + المستخدم غير موجود في قاعدة البيانات (تم حذفه)
+                    if (isStandalone && !snapshot.exists()) {
+                        localStorage.removeItem('abqarieno_setup_done'); // حذف التخزين المحلي
+                        const modal = document.getElementById('registrationModal');
+                        if (modal) {
+                            modal.classList.remove('hidden'); // إظهار نافذة التسجيل
+                            alert("تنبيه إداري: تم تحديث سجلات الطلاب. يرجى إعادة تسجيل بياناتك للمتابعة.");
+                        }
+                    }
+                });
             }
         });
 
@@ -319,6 +352,7 @@
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     formData.append('upload_preset', 'my_chat_preset'); // تأكد أن هذا الاسم موجود في Cloudinary ونوعه Unsigned
+                    formData.append('transformation', 'w_800,c_limit,q_auto,f_auto'); // ضغط الصورة وتقليل حجمها تلقائياً
 
                     console.log("جاري رفع الصورة لـ Cloudinary...");
                     const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dzwrz9qzb/image/upload', {

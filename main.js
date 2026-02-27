@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pageLoader) {
         setTimeout(() => {
             pageLoader.classList.add('loader-hidden');
-        }, 500); // Faster fade out
+        }, 200); // Ultra fast fade out
     }
 
     // 2. Menu Toggle
@@ -89,4 +89,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const animatedElements = document.querySelectorAll('.scroll-animate');
     animatedElements.forEach((el) => observer.observe(el));
+
 });
