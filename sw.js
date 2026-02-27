@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abqarieno-v5'; // Update: Removed update toast logic
+const CACHE_NAME = 'abqarieno-v6'; // Update: Force update by changing cache version
 const ASSETS = [
     './',
     './index.html',

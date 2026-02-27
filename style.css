@@ -1236,3 +1236,14 @@ audio::-webkit-media-controls-play-button { background-color: #fff; border-radiu
     color: black;
     box-shadow: 0 0 20px var(--neon-orange);
 }
+
+.registration-card .warning-text {
+    color: var(--neon-gold);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.05);
+    border-radius: 8px;
+    line-height: 1.5;
+}
