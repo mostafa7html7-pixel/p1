@@ -352,7 +352,6 @@
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     formData.append('upload_preset', 'my_chat_preset'); // تأكد أن هذا الاسم موجود في Cloudinary ونوعه Unsigned
-                    formData.append('transformation', 'w_800,c_limit,q_auto,f_auto'); // ضغط الصورة وتقليل حجمها تلقائياً
 
                     console.log("جاري رفع الصورة لـ Cloudinary...");
                     const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dzwrz9qzb/image/upload', {

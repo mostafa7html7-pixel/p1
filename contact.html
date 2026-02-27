@@ -437,9 +437,6 @@
                             const formData = new FormData();
                             formData.append('file', file);
                             formData.append('upload_preset', UPLOAD_PRESET);
-                            if (file.type.startsWith('image/')) {
-                                formData.append('transformation', 'q_auto,f_auto'); // ضغط الصور تلقائياً
-                            }
                             
                             responseData = await uploadChunk(formData, null, null, (progress) => {
                                 progressBar.style.width = progress + '%';

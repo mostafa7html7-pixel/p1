@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abqarieno-v22'; // Fix: Cloudinary Upload Preset
+const CACHE_NAME = 'abqarieno-v23'; // Fix: Cloudinary Transformation Error
 const ASSETS = [
     './',
     './index.html',
