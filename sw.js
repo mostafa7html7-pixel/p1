@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abqarieno-v21'; // Update: Fix Navigation Logic
+const CACHE_NAME = 'abqarieno-v22'; // Fix: Cloudinary Upload Preset
 const ASSETS = [
     './',
     './index.html',
