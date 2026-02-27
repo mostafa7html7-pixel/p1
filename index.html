@@ -288,9 +288,13 @@
             const statusDiv = document.getElementById('status');
             const modal = document.getElementById('registrationModal');
 
+            // التحقق من وضع التطبيق (هل هو مثبت؟)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
             // التحقق من التسجيل المسبق
             const isRegistered = localStorage.getItem('abqarieno_setup_done');
-            if (isRegistered === 'true') {
+            
+            // إخفاء النافذة إذا كان موقع ويب عادي (ليس تطبيق) أو إذا كان المستخدم مسجلاً مسبقاً
+            if (!isStandalone || isRegistered === 'true') {
                 modal.classList.add('hidden');
             }
 
