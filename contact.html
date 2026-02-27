@@ -278,8 +278,8 @@
     </footer>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8",
@@ -288,7 +288,8 @@
             projectId: "abqarieno",
             storageBucket: "abqarieno.firebasestorage.app",
             messagingSenderId: "790682500839",
-            appId: "1:790682500839:web:cd50b8e01729f821e06c42"
+            appId: "1:790682500839:web:cde37488fc2a4f84e06c42",
+            measurementId: "G-8VV9QVEPZK"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -358,8 +359,8 @@
         // --- المنطق الجديد لرفع الملفات باستخدام Cloudinary ---
         
         // بيانات Cloudinary الخاصة بك
-        const CLOUD_NAME = "dzwrz9qzb";
-        const UPLOAD_PRESET = "my_chat_preset"; 
+        const CLOUD_NAME = "dzwrz9qzb"; // تأكد أن هذا هو اسم السحابة الخاص بك
+        const UPLOAD_PRESET = "ml_default"; // تم التوحيد مع index.html (تأكد أنه Unsigned)
 
         // --- دالة مساعدة لرفع جزء واحد (Chunk) أو ملف كامل ---
         function uploadChunk(formData, uniqueId, contentRange, onProgress, resourceType = 'auto') {

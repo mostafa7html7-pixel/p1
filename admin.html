@@ -69,7 +69,10 @@
                 <div class="panel-section">
                     <div class="panel-header">
                         <div class="panel-title"><i class="fa-solid fa-user-secret" style="color:var(--neon-blue)"></i> مراقبة الطلاب (Live Monitor)</div>
-                        <input type="text" placeholder="بحث عن طالب..." style="background:#050508; border:1px solid #333; color:#fff; padding:8px 15px; border-radius:20px; outline:none;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button id="faceFilterBtn" onclick="toggleFaceFilter()" style="background:transparent; border:1px solid #444; color:#888; padding:6px 15px; border-radius:20px; cursor:pointer; font-size:0.85rem; transition:0.3s;"><i class="fa-regular fa-face-smile"></i> مسجلين بالوجه</button>
+                            <input type="text" id="searchInput" onkeyup="renderUsersTable()" placeholder="بحث عن طالب..." style="background:#050508; border:1px solid #333; color:#fff; padding:8px 15px; border-radius:20px; outline:none;">
+                        </div>
                     </div>
                     <div style="overflow-x:auto;">
                         <table class="users-table">
@@ -191,11 +194,20 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, push, serverTimestamp, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, serverTimestamp, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8", authDomain: "abqarieno.firebaseapp.com", databaseURL: "https://abqarieno-default-rtdb.firebaseio.com", projectId: "abqarieno", storageBucket: "abqarieno.firebasestorage.app", messagingSenderId: "790682500839", appId: "1:790682500839:web:cd50b8e01729f821e06c42" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8",
+            authDomain: "abqarieno.firebaseapp.com",
+            databaseURL: "https://abqarieno-default-rtdb.firebaseio.com",
+            projectId: "abqarieno",
+            storageBucket: "abqarieno.firebasestorage.app",
+            messagingSenderId: "790682500839",
+            appId: "1:790682500839:web:cde37488fc2a4f84e06c42",
+            measurementId: "G-8VV9QVEPZK"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
@@ -283,6 +295,113 @@
             if(btnElement) btnElement.classList.add('active');
         }
 
+        let currentUsersSnapshot = null;
+        let faceFilterActive = false;
+
+        window.toggleFaceFilter = function() {
+            faceFilterActive = !faceFilterActive;
+            const btn = document.getElementById('faceFilterBtn');
+            if(faceFilterActive) {
+                btn.style.borderColor = 'var(--neon-green)';
+                btn.style.color = 'var(--neon-green)';
+                btn.style.background = 'rgba(0, 255, 65, 0.1)';
+            } else {
+                btn.style.borderColor = '#444';
+                btn.style.color = '#888';
+                btn.style.background = 'transparent';
+            }
+            renderUsersTable();
+        }
+
+        window.renderUsersTable = function() {
+            if (!currentUsersSnapshot) return;
+
+            const usersTableBody = document.getElementById('usersTableBody');
+            const banTableBody = document.getElementById('banTableBody');
+            const searchInput = document.getElementById('searchInput');
+            const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+
+            usersTableBody.innerHTML = '';
+            banTableBody.innerHTML = '';
+            const now = Date.now();
+
+            currentUsersSnapshot.forEach((childSnapshot) => {
+                const u = childSnapshot.val();
+                const uid = childSnapshot.key;
+
+                // Filter Logic
+                const displayName = u.username || u.name || 'بدون اسم';
+                const hasFaceImage = !!u.faceImage;
+
+                if (faceFilterActive && !hasFaceImage) return;
+
+                // Search Logic
+                if (searchText) {
+                    const phone = u.phone || '';
+                    const email = u.email || '';
+                    if (!displayName.toLowerCase().includes(searchText) && 
+                        !phone.includes(searchText) && 
+                        !email.toLowerCase().includes(searchText)) {
+                        return;
+                    }
+                }
+
+                // حساب حالة الاتصال (إذا كان آخر ظهور أقل من 5 دقائق)
+                let isOnline = false;
+                let lastSeenText = "غير معروف";
+                
+                // دعم الحقول الجديدة (name, faceImage, timestamp)
+                const displayPhoto = u.photoURL || u.faceImage;
+                const displayEmail = u.email || '<span style="color:var(--neon-gold); font-size:0.8rem;">تسجيل وجه (مجهول)</span>';
+                
+                // استخدام timestamp كبديل لـ lastLogin للمسجلين الجدد
+                const lastActive = u.lastLogin || u.timestamp;
+
+                if (lastActive) {
+                    const diff = now - lastActive;
+                    if (diff < 5 * 60 * 1000) { // 5 دقائق
+                        isOnline = true;
+                    }
+                    lastSeenText = new Date(lastActive).toLocaleString('ar-EG');
+                }
+
+                const avatarHTML = displayPhoto 
+                    ? `<img src="${displayPhoto}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-left:8px; border:1px solid var(--neon-green);">` 
+                    : `<i class="fa-solid fa-user-graduate" style="font-size:1.2rem; margin-left:8px; vertical-align:middle;"></i>`;
+
+                const row = `
+                    <tr style="${u.banned ? 'background:rgba(255,0,0,0.1)' : ''}">
+                        <td>${avatarHTML} <span style="vertical-align:middle;">${displayName}</span> ${u.role === 'admin' ? '<span style="color:gold; font-size:0.8rem;">(Admin)</span>' : ''}</td>
+                        <td>${u.phone || '<span style="color:#555">غير مسجل</span>'}</td>
+                        <td style="font-family:monospace; color:#888;">${displayEmail}</td>
+                        <td>${u.grade || '<span style="color:#555">غير محدد</span>'}</td>
+                        <td><span class="user-status ${isOnline ? 'status-online' : 'status-offline'}"></span> ${isOnline ? 'متصل' : 'غير متصل'}</td>
+                        <td>${isOnline ? 'الآن' : lastSeenText}</td>
+                        <td>${u.subscription === 'active' ? '<span style="color:var(--neon-green)">مشترك</span>' : 'مجاني'}</td>
+                        <td>
+                            ${u.role !== 'admin' ? `
+                                <button class="action-btn btn-info" onclick="openEditModal('${uid}', '${displayName}', '${u.phone || ''}', '${u.grade || ''}', '${u.subscription || 'free'}', '${u.plan || ''}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="action-btn btn-ban" onclick="banUser('${uid}', ${u.banned})">${u.banned ? 'فك الحظر' : 'حظر'}</button>
+                                <button class="action-btn btn-delete" onclick="deleteUser('${uid}')"><i class="fa-solid fa-trash"></i></button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+                usersTableBody.innerHTML += row;
+
+                if (u.banned) {
+                    const banRow = `
+                        <tr>
+                            <td>${displayName}</td>
+                            <td>${displayEmail}</td>
+                            <td><button class="action-btn btn-ban" onclick="banUser('${uid}', true)">فك الحظر</button></td>
+                        </tr>
+                    `;
+                    banTableBody.innerHTML += banRow;
+                }
+            });
+        }
+
         function initDashboard() {
             // 1. Clock
             setInterval(() => {
@@ -291,65 +410,8 @@
 
             // 2. جلب المستخدمين الحقيقيين (Realtime)
             onValue(ref(db, 'users'), (snapshot) => {
-                const usersTableBody = document.getElementById('usersTableBody');
-                const banTableBody = document.getElementById('banTableBody');
-                usersTableBody.innerHTML = '';
-                banTableBody.innerHTML = '';
-                const now = Date.now();
-
-                snapshot.forEach((childSnapshot) => {
-                    const u = childSnapshot.val();
-                    const uid = childSnapshot.key;
-                    total++;
-
-                    // حساب حالة الاتصال (إذا كان آخر ظهور أقل من 5 دقائق)
-                    let isOnline = false;
-                    let lastSeenText = "غير معروف";
-                    
-                    if (u.lastLogin) {
-                        const diff = now - u.lastLogin;
-                        if (diff < 5 * 60 * 1000) { // 5 دقائق
-                            isOnline = true;
-                        }
-                        lastSeenText = new Date(u.lastLogin).toLocaleString('ar-EG');
-                    }
-
-                    const avatarHTML = u.photoURL 
-                        ? `<img src="${u.photoURL}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-left:8px; border:1px solid var(--neon-green);">` 
-                        : `<i class="fa-solid fa-user-graduate" style="font-size:1.2rem; margin-left:8px; vertical-align:middle;"></i>`;
-
-                    const row = `
-                        <tr style="${u.banned ? 'background:rgba(255,0,0,0.1)' : ''}">
-                            <td>${avatarHTML} <span style="vertical-align:middle;">${u.username || 'بدون اسم'}</span> ${u.role === 'admin' ? '<span style="color:gold; font-size:0.8rem;">(Admin)</span>' : ''}</td>
-                            <td>${u.phone || '<span style="color:#555">غير مسجل</span>'}</td>
-                            <td style="font-family:monospace; color:#888;">${u.email}</td>
-                            <td>${u.grade || '<span style="color:#555">غير محدد</span>'}</td>
-                            <td><span class="user-status ${isOnline ? 'status-online' : 'status-offline'}"></span> ${isOnline ? 'متصل' : 'غير متصل'}</td>
-                            <td>${isOnline ? 'الآن' : lastSeenText}</td>
-                            <td>${u.subscription === 'active' ? '<span style="color:var(--neon-green)">مشترك</span>' : 'مجاني'}</td>
-                            <td>
-                                ${u.role !== 'admin' ? `
-                                    <button class="action-btn btn-info" onclick="openEditModal('${uid}', '${u.username || ''}', '${u.phone || ''}', '${u.grade || ''}', '${u.subscription || 'free'}', '${u.plan || ''}')"><i class="fa-solid fa-pen"></i></button>
-                                    <button class="action-btn btn-ban" onclick="banUser('${uid}', ${u.banned})">${u.banned ? 'فك الحظر' : 'حظر'}</button>
-                                    <button class="action-btn btn-delete" onclick="deleteUser('${uid}')"><i class="fa-solid fa-trash"></i></button>
-                                ` : ''}
-                            </td>
-                        </tr>
-                    `;
-                    usersTableBody.innerHTML += row;
-
-                    if (u.banned) {
-                        const banRow = `
-                            <tr>
-                                <td>${u.username}</td>
-                                <td>${u.email}</td>
-                                <td><button class="action-btn btn-ban" onclick="banUser('${uid}', true)">فك الحظر</button></td>
-                            </tr>
-                        `;
-                        banTableBody.innerHTML += banRow;
-                    }
-                });
-
+                currentUsersSnapshot = snapshot;
+                renderUsersTable();
             });
 
             // 4. Payment Requests Listener

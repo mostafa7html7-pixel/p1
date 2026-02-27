@@ -152,7 +152,7 @@
         </div>
     </section>
 
-    <div class="neon-wrapper">
+    <div class="neon-wrapper" id="registrationModal">
         <div class="registration-card">
             <h2>انضم إلى العباقرة</h2>
             <p class="warning-text">تنبيه: سيتم مراجعة البيانات، وأي معلومات غير حقيقية ستؤدي إلى حظر الحساب فوراً.</p>
@@ -220,11 +220,20 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { getDatabase, ref, query, limitToLast, onValue, onChildAdded, get, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, query, limitToLast, onValue, onChildAdded, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8", authDomain: "abqarieno.firebaseapp.com", databaseURL: "https://abqarieno-default-rtdb.firebaseio.com", projectId: "abqarieno", storageBucket: "abqarieno.firebasestorage.app", messagingSenderId: "790682500839", appId: "1:790682500839:web:cd50b8e01729f821e06c42" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8",
+            authDomain: "abqarieno.firebaseapp.com",
+            databaseURL: "https://abqarieno-default-rtdb.firebaseio.com",
+            projectId: "abqarieno",
+            storageBucket: "abqarieno.firebasestorage.app",
+            messagingSenderId: "790682500839",
+            appId: "1:790682500839:web:cde37488fc2a4f84e06c42",
+            measurementId: "G-8VV9QVEPZK"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
@@ -248,45 +257,65 @@
         const regForm = document.getElementById('regForm');
         if (regForm) {
             const statusDiv = document.getElementById('status');
+            const modal = document.getElementById('registrationModal');
+
+            // التحقق من التسجيل المسبق
+            const isRegistered = localStorage.getItem('abqarieno_setup_done');
+            if (isRegistered === 'true') {
+                modal.classList.add('hidden');
+            }
 
             regForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                console.log("بدء عملية التسجيل...");
                 const submitBtn = document.getElementById('submitBtn');
                 submitBtn.innerText = "جاري التحميل...";
                 submitBtn.disabled = true;
 
                 try {
                     // 1. تسجيل دخول مجهول أولاً
+                    console.log("جاري تسجيل الدخول...");
                     const userCredential = await signInAnonymously(auth);
                     const uid = userCredential.user.uid;
+                    console.log("تم تسجيل الدخول، UID:", uid);
 
                     // 2. رفع الصورة إلى Cloudinary
-                    const file = document.getElementById('userPhoto').files[0];
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('upload_preset', 'YOUR_CLOUDINARY_UPLOAD_PRESET'); // هام: استبدله من إعدادات Cloudinary
+                    const fileInput = document.getElementById('userPhoto');
+                    if (!fileInput.files[0]) return alert("من فضلك اختر صورة وجهك");
 
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('upload_preset', 'ml_default'); // تأكد أن هذا الاسم موجود في Cloudinary ونوعه Unsigned
+
+                    console.log("جاري رفع الصورة لـ Cloudinary...");
                     const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dzwrz9qzb/image/upload', {
                         method: 'POST',
                         body: formData
                     });
                     const cloudData = await cloudRes.json();
+                    if (!cloudData.secure_url) throw new Error("فشل رفع الصورة: " + (cloudData.error?.message || "تأكد من إعدادات Cloudinary وعمل Unsigned Preset"));
                     const imageUrl = cloudData.secure_url;
 
                     // 3. حفظ البيانات في Firebase Realtime Database
+                    console.log("جاري حفظ البيانات في فايربيس...");
                     await set(ref(db, 'users/' + uid), {
                         name: document.getElementById('userName').value,
                         phone: document.getElementById('userPhone').value,
                         faceImage: imageUrl,
-                        createdAt: new Date().toISOString()
+                        timestamp: new Date().getTime()
                     });
 
-                    statusDiv.innerHTML = "<p style='color: #00ff00;'>تم التسجيل بنجاح!</p>";
+                    // 4. إتمام التسجيل وإخفاء النافذة
+                    localStorage.setItem('abqarieno_setup_done', 'true');
+                    alert("تم حفظ بياناتك بنجاح في قاعدة البيانات!");
+                    statusDiv.innerHTML = "<p style='color: #00ff00;'>تم التسجيل بنجاح! سيتم تحويلك...</p>";
                     regForm.reset();
+                    setTimeout(() => modal.classList.add('hidden'), 1500);
 
                 } catch (error) {
-                    console.error(error);
-                    statusDiv.innerHTML = "<p style='color: red;'>حدث خطأ، حاول مرة أخرى</p>";
+                    console.error("حدث خطأ:", error);
+                    statusDiv.innerHTML = `<p style='color: red;'>فشل التسجيل: ${error.message}</p>`;
+                    alert("فشل التسجيل: " + error.message);
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerText = "تسجيل الآن";

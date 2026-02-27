@@ -421,10 +421,19 @@
         </div>
     </div>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8", authDomain: "abqarieno.firebaseapp.com", databaseURL: "https://abqarieno-default-rtdb.firebaseio.com", projectId: "abqarieno", storageBucket: "abqarieno.firebasestorage.app", messagingSenderId: "790682500839", appId: "1:790682500839:web:cd50b8e01729f821e06c42" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyD092yeOowtCLW0fDcIzaEXrnxvrN4X5T8",
+            authDomain: "abqarieno.firebaseapp.com",
+            databaseURL: "https://abqarieno-default-rtdb.firebaseio.com",
+            projectId: "abqarieno",
+            storageBucket: "abqarieno.firebasestorage.app",
+            messagingSenderId: "790682500839",
+            appId: "1:790682500839:web:cde37488fc2a4f84e06c42",
+            measurementId: "G-8VV9QVEPZK"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
