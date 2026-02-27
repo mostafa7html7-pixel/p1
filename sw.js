@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abqarieno-v10'; // Update: Force update by changing cache version
+const CACHE_NAME = 'abqarieno-v12'; // Update: Force update by changing cache version
 const ASSETS = [
     './',
     './index.html',

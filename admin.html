@@ -64,6 +64,21 @@
                 </div>
             </header>
 
+            <!-- Stats Grid -->
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>إجمالي الطلاب</h3>
+                    <div class="number" id="totalStudents">0</div>
+                    <i class="fa-solid fa-users icon-bg"></i>
+                </div>
+                <div class="stat-card gold">
+                    <h3>مسجلين اليوم</h3>
+                    <div class="number" id="todayStudents">0</div>
+                    <button onclick="showTodayStudents()" style="background:transparent; border:1px solid var(--neon-gold); color:var(--neon-gold); padding:5px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; margin-top:5px;">عرض الأسماء</button>
+                    <i class="fa-solid fa-user-plus icon-bg"></i>
+                </div>
+            </div>
+
             <!-- SECTION: STUDENTS -->
             <div id="sec-students" class="content-section">
                 <div class="panel-section">
@@ -81,6 +96,7 @@
                                     <th>اسم الطالب / الجهاز</th>
                                     <th>رقم الهاتف</th>
                                     <th>البريد الإلكتروني</th>
+                                    <th>الجنس</th>
                                     <th>الصف الدراسي</th>
                                     <th>الحالة</th>
                                     <th>آخر ظهور</th>
@@ -179,6 +195,14 @@
                 </select>
             </div>
             <div class="modal-input-group">
+                <label>الجنس</label>
+                <select id="editGender">
+                    <option value="">غير محدد</option>
+                    <option value="male">ولد</option>
+                    <option value="female">بنت</option>
+                </select>
+            </div>
+            <div class="modal-input-group">
                 <label>حالة الاشتراك</label>
                 <select id="editSubscription">
                     <option value="free">مجاني (Free)</option>
@@ -190,6 +214,32 @@
                 <input type="text" id="editPlan" placeholder="مثال: شهري, ترم كامل">
             </div>
             <button onclick="saveUserChanges()" class="auth-btn" style="margin-top:10px;">حفظ التعديلات</button>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox-overlay" class="lightbox-overlay">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div class="lightbox-content" id="lightbox-content">
+        </div>
+    </div>
+
+    <!-- Today Students Modal -->
+    <div id="todayStudentsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('todayStudentsModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center; margin-bottom:20px; color:var(--neon-gold);">الطلاب المسجلين اليوم</h2>
+            <div style="max-height:300px; overflow-y:auto;">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="todayStudentsList"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -213,12 +263,25 @@
         const auth = getAuth(app);
 
         // Menu Toggle Logic
-        const menuBtn = document.querySelector('.menu-btn');
-        const navLinks = document.querySelector('.nav-links');
-        menuBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            menuBtn.innerHTML = navLinks.classList.contains('active') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
-        });
+        const adminMenuBtn = document.querySelector('.admin-top-nav .menu-btn');
+        const adminSidebar = document.querySelector('.admin-sidebar');
+
+        if (adminMenuBtn && adminSidebar) {
+            adminMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                adminSidebar.classList.toggle('active');
+                const icon = adminMenuBtn.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-xmark');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && adminSidebar.classList.contains('active') && !adminSidebar.contains(e.target) && !adminMenuBtn.contains(e.target)) {
+                    adminSidebar.classList.remove('active');
+                    adminMenuBtn.querySelector('i').classList.replace('fa-xmark', 'fa-bars');
+                }
+            });
+        }
 
         let currentUserUid = null;
 
@@ -297,6 +360,7 @@
 
         let currentUsersSnapshot = null;
         let faceFilterActive = false;
+        let todayStudentsData = [];
 
         window.toggleFaceFilter = function() {
             faceFilterActive = !faceFilterActive;
@@ -324,10 +388,16 @@
             usersTableBody.innerHTML = '';
             banTableBody.innerHTML = '';
             const now = Date.now();
+            const startOfDay = new Date();
+            startOfDay.setHours(0,0,0,0);
+            
+            let totalCount = 0;
+            todayStudentsData = [];
 
             currentUsersSnapshot.forEach((childSnapshot) => {
                 const u = childSnapshot.val();
                 const uid = childSnapshot.key;
+                totalCount++;
 
                 // Filter Logic
                 const displayName = u.username || u.name || 'بدون اسم';
@@ -357,6 +427,22 @@
                 // استخدام timestamp كبديل لـ lastLogin للمسجلين الجدد
                 const lastActive = u.lastLogin || u.timestamp;
 
+                const displayGender = u.gender === 'male' 
+                    ? '<span style="color:#00aaff;"><i class="fa-solid fa-mars"></i> ولد</span>' 
+                    : (u.gender === 'female' 
+                        ? '<span style="color:#ff69b4;"><i class="fa-solid fa-venus"></i> بنت</span>' 
+                        : '<span style="color:#555">غير محدد</span>');
+
+                // Check if registered today
+                // نستخدم joinedAt أو timestamp (للمسجلين الجدد)
+                const joinDate = u.joinedAt ? new Date(u.joinedAt).getTime() : (u.timestamp || 0);
+                if (joinDate >= startOfDay.getTime()) {
+                    todayStudentsData.push({
+                        name: displayName,
+                        time: new Date(joinDate).toLocaleTimeString('ar-EG')
+                    });
+                }
+
                 if (lastActive) {
                     const diff = now - lastActive;
                     if (diff < 5 * 60 * 1000) { // 5 دقائق
@@ -366,7 +452,7 @@
                 }
 
                 const avatarHTML = displayPhoto 
-                    ? `<img src="${displayPhoto}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-left:8px; border:1px solid var(--neon-green);">` 
+                    ? `<img src="${displayPhoto}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-left:8px; border:2px solid var(--neon-green); cursor:pointer;" onclick="openLightbox('${displayPhoto}', 'image')">` 
                     : `<i class="fa-solid fa-user-graduate" style="font-size:1.2rem; margin-left:8px; vertical-align:middle;"></i>`;
 
                 const row = `
@@ -374,13 +460,14 @@
                         <td>${avatarHTML} <span style="vertical-align:middle;">${displayName}</span> ${u.role === 'admin' ? '<span style="color:gold; font-size:0.8rem;">(Admin)</span>' : ''}</td>
                         <td>${u.phone || '<span style="color:#555">غير مسجل</span>'}</td>
                         <td style="font-family:monospace; color:#888;">${displayEmail}</td>
+                        <td>${displayGender}</td>
                         <td>${u.grade || '<span style="color:#555">غير محدد</span>'}</td>
                         <td><span class="user-status ${isOnline ? 'status-online' : 'status-offline'}"></span> ${isOnline ? 'متصل' : 'غير متصل'}</td>
                         <td>${isOnline ? 'الآن' : lastSeenText}</td>
                         <td>${u.subscription === 'active' ? '<span style="color:var(--neon-green)">مشترك</span>' : 'مجاني'}</td>
                         <td>
                             ${u.role !== 'admin' ? `
-                                <button class="action-btn btn-info" onclick="openEditModal('${uid}', '${displayName}', '${u.phone || ''}', '${u.grade || ''}', '${u.subscription || 'free'}', '${u.plan || ''}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="action-btn btn-info" onclick="openEditModal('${uid}', '${displayName}', '${u.phone || ''}', '${u.grade || ''}', '${u.subscription || 'free'}', '${u.plan || ''}', '${u.gender || ''}')"><i class="fa-solid fa-pen"></i></button>
                                 <button class="action-btn btn-ban" onclick="banUser('${uid}', ${u.banned})">${u.banned ? 'فك الحظر' : 'حظر'}</button>
                                 <button class="action-btn btn-delete" onclick="deleteUser('${uid}')"><i class="fa-solid fa-trash"></i></button>
                             ` : ''}
@@ -400,7 +487,46 @@
                     banTableBody.innerHTML += banRow;
                 }
             });
+            
+            // Update Stats
+            document.getElementById('totalStudents').innerText = totalCount;
+            document.getElementById('todayStudents').innerText = todayStudentsData.length;
         }
+
+        window.showTodayStudents = function() {
+            const list = document.getElementById('todayStudentsList');
+            list.innerHTML = '';
+            todayStudentsData.forEach(student => {
+                list.innerHTML += `
+                    <tr>
+                        <td>${student.name}</td>
+                        <td>${student.time}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('todayStudentsModal').style.display = 'block';
+        }
+
+        // Lightbox Functions
+        window.openLightbox = function(src, type) {
+            const container = document.getElementById('lightbox-content');
+            const overlay = document.getElementById('lightbox-overlay');
+            container.innerHTML = '';
+            if (type === 'image') {
+                const img = document.createElement('img');
+                img.src = src;
+                container.appendChild(img);
+            }
+            overlay.classList.add('active');
+        };
+
+        window.closeLightbox = function() {
+            const overlay = document.getElementById('lightbox-overlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('lightbox-content').innerHTML = '';
+            }, 400);
+        };
 
         function initDashboard() {
             // 1. Clock
@@ -527,13 +653,14 @@
         }
 
         // --- Edit User Functions ---
-        window.openEditModal = function(uid, name, phone, grade, sub, plan) {
+        window.openEditModal = function(uid, name, phone, grade, sub, plan, gender) {
             document.getElementById('editUserId').value = uid;
             document.getElementById('editUsername').value = name;
             document.getElementById('editPhone').value = phone;
             document.getElementById('editGrade').value = grade;
             document.getElementById('editSubscription').value = sub;
             document.getElementById('editPlan').value = plan;
+            document.getElementById('editGender').value = gender || '';
             document.getElementById('editUserModal').style.display = 'block';
         }
 
@@ -548,11 +675,13 @@
             const grade = document.getElementById('editGrade').value;
             const sub = document.getElementById('editSubscription').value;
             const plan = document.getElementById('editPlan').value;
+            const gender = document.getElementById('editGender').value;
 
             update(ref(db, 'users/' + uid), {
                 username: name,
                 phone: phone,
                 grade: grade,
+                gender: gender,
                 subscription: sub,
                 plan: plan
             }).then(() => {
@@ -565,9 +694,13 @@
 
         // إغلاق النافذة عند الضغط خارجها
         window.onclick = function(event) {
-            const modal = document.getElementById('editUserModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
+            const editModal = document.getElementById('editUserModal');
+            const todayModal = document.getElementById('todayStudentsModal');
+            const lightbox = document.getElementById('lightbox-overlay');
+            if (event.target == editModal) editModal.style.display = "none";
+            if (event.target == todayModal) todayModal.style.display = "none";
+            if (event.target == lightbox) {
+                closeLightbox();
             }
         }
     </script>
